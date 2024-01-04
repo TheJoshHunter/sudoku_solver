@@ -1,0 +1,8 @@
+{
+    "cSpell.words": ["filedrop", "photobook", "pocketbase"],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "files.eol": "\n"
+}
