@@ -1,5 +1,6 @@
 <script lang="ts">
     import { browser } from "$app/environment";
+    import Greet from "$lib/Greet.svelte";
     import { onMount } from "svelte";
     import "../../node_modules/bootstrap/dist/css/bootstrap.css";
     onMount(() => {
@@ -133,4 +134,6 @@
     <title>Sudoku Solver</title>
 </svelte:head>
 
-<div class="container"></div>
+<div class="container">
+    <Greet />
+</div>
