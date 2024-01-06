@@ -1,6 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+// exists to easily check if we are running in tauri or not
+#[tauri::command]
+fn check() -> bool {
+    true // just to make sure it works
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
@@ -82,7 +88,7 @@ fn solve(board: [[i32; 9]; 9]) -> [[i32; 9]; 9] {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, validate, solve])
+        .invoke_handler(tauri::generate_handler![check, greet, validate, solve])
         .run(tauri::generate_context!())
         .expect("Something went wrong while running Tauri application.");
 }
