@@ -184,7 +184,9 @@ fn is_solved(board: &[[i32; 9]; 9]) -> bool {
             }
         }
     }
-
+    if DEBUG {
+        println!("Board is solved!");
+    }
     return true;
 }
 
@@ -212,26 +214,29 @@ fn empty_spaces(board: &[[i32; 9]; 9]) -> i32 {
 * @return The solved sudoku board.
 */
 #[tauri::command]
-fn solve(mut board: [[i32; 9]; 9]) -> [[i32; 9]; 9] {
+fn solve(mut board: [[i32; 9]; 9]) -> Result<[[i32; 9]; 9], ()> {
     // print the initial board
     println!("Solving board: ");
     print_board(&board);
 
     // run the inner solve function
-    return solve_inner(&mut board);
+    return solve_inner(&mut board, (0, 0));
 }
 
-/*
-Inner solve function to handle the actual solving of the board.
-This function uses hill climbing to solve the board.
-@param board The sudoku board to solve.
-@return The solved sudoku board.
+/**
+* Inner solve function to handle the actual solving of the board.
+* This function uses hill climbing to solve the board.
+* @param board The sudoku board to solve.
+* @param start_space The space to start solving at (used for backtracking, starts at 0,0 but will be updated if 0,0 is not empty).
+* @return The solved sudoku board.
 */
-fn solve_inner(board: &mut [[i32; 9]; 9]) -> [[i32; 9]; 9] {
-    // create a vector to store the empty spaces
+fn solve_inner(
+    board: &mut [[i32; 9]; 9],
+    mut start_space: (usize, usize),
+) -> Result<[[i32; 9]; 9], ()> {
     let mut empty_spaces = Vec::new();
 
-    // iterate over the board
+    // find all the empty spaces to fill (we don't want to change existing numbers)
     for row in 0..9 {
         for col in 0..9 {
             if board[row][col] == 0 {
@@ -241,11 +246,20 @@ fn solve_inner(board: &mut [[i32; 9]; 9]) -> [[i32; 9]; 9] {
         }
     }
 
+    // if the start space is not empty, find the next empty space
+    if board[start_space.0][start_space.1] != 0 {
+        for i in 0..empty_spaces.len() {
+            if empty_spaces[i] == start_space {
+                start_space = empty_spaces[i + 1];
+                break;
+            }
+        }
+    }
+
     // iterate over the empty spaces
     for i in 0..empty_spaces.len() {
-        // get the row and column of the current empty space
-        let row = empty_spaces[i].0;
-        let col = empty_spaces[i].1;
+        // start from out start space
+        let (row, col) = start_space;
 
         // iterate over the numbers 1-9
         for num in 1..10 {
@@ -257,12 +271,12 @@ fn solve_inner(board: &mut [[i32; 9]; 9]) -> [[i32; 9]; 9] {
                 // if the board is valid, check if it is solved
                 if is_solved(&board) {
                     // if the board is solved, return it
-                    return *board;
+                    return Ok(*board);
                 } else {
                     // if the board is not solved, solve the next empty space
-                    let solved_board = solve_inner(board);
+                    let solved_board = solve_inner(board, empty_spaces[i + 1]).unwrap();
                     if is_solved(&solved_board) {
-                        return solved_board;
+                        return Ok(solved_board);
                     }
                 }
             }
@@ -272,12 +286,12 @@ fn solve_inner(board: &mut [[i32; 9]; 9]) -> [[i32; 9]; 9] {
         // set the current empty space back to 0
         board[row][col] = 0;
         // return the board
-        return *board;
+        return Err(());
     }
 
     // if we get here, we have tried all empty spaces and none of them worked
     // return the board
-    return *board;
+    return Ok(*board);
 }
 
 /*
