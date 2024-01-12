@@ -1,7 +1,7 @@
 <script lang="ts">
     import { browser } from "$app/environment";
     import Check from "$lib/Check.svelte";
-    import Greet from "$lib/Greet.svelte";
+    import { invoke } from "@tauri-apps/api/tauri";
     import { onMount } from "svelte";
     import "../../node_modules/bootstrap/dist/css/bootstrap.css";
     onMount(() => {
@@ -25,59 +25,57 @@
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    let user_is_ready: boolean = false;
+    let board_is_solvable: boolean = false;
 
     let thinking: boolean = false; // set to false to show the ready button, set to true to show the thinking spinner
 
-    let last_move: string = ""; // holds the last move made by the computer for the user to see
+    async function solve() {
+        // validate that the array is 9x9 as Rust will panic if it is too big
+        if (board.length != 9 || board[0].length != 9) {
+            alert("The board is not 9x9");
+            return;
+        }
+        // call the tauri api to solve the sudoku
+        thinking = true;
+        invoke("solve", { board })
+            .then((response) => {
+                // set the board to the response
+                board = response as number[][];
+                // set the thinking spinner to false
+                thinking = false;
+            })
+            .catch((error) => {
+                // set the thinking spinner to false
+                thinking = false;
+                // alert the user of the error
+                alert(error);
+            });
+    }
 
-    // function solve() {
-    //     // called when the solve button is clicked
-    //     // uses simple backtracking to solve the sudoku board
-    //     // algorithm:
-    //     // 1. find the first empty square
-    //     // 2. try each number from 1 to 9 in that square
-    //     // 3. if the number is valid, move on to the next empty square
-    //     // 4. if the number is not valid, try the next number
-    //     // 5. if all numbers are not valid, go back to the previous square and try the next number
-    //     // 6. if all numbers are not valid and there is no previous square, the board is unsolvable
-    //     // 7. if all squares are filled, the board is solved
-    //     // 8. if the board is solved, return true
-
-    //     // First make sure that we havent already solved the board saving everyone some time
-    //     if (validate()) return true;
-
-    //     // evidently we havent solved the board yet, so lets get to work
-    //     // find the first empty square
-    //     let empty_square: number[] = [0, 0];
-    //     board.forEach((row, row_index) => {
-    //         row.forEach((num, col_index) => {
-    //             if (num === 0) {
-    //                 empty_square = [row_index, col_index];
-    //                 return;
-    //             }
-    //         });
-    //     });
-    //     // now that we have the first empty square, lets try each number from 1 to 9
-    //     for (let i = 1; i <= 9; i++) {
-    //         // try the number
-    //         board[empty_square[0]][empty_square[1]] = i;
-    //         // check if the number is valid
-    //         if (validate()) {
-    //             // the number is valid, so lets move on to the next empty square
-    //             if (solve()) {
-    //                 // the board is solved, so lets return true
-    //                 return true;
-    //             } else {
-    //                 // the board is not solved, so lets try the next number
-    //                 continue;
-    //             }
-    //         } else {
-    //             // the number is not valid, so lets try the next number
-    //             continue;
-    //         }
-    //     }
-    // }
+    async function validate() {
+        // validate that the array is 9x9 as Rust will panic if it is too big
+        if (board.length != 9 || board[0].length != 9) {
+            alert("The board is not 9x9");
+            return;
+        }
+        // call the tauri api to solve the sudoku
+        thinking = true;
+        invoke("validate", { board })
+            .then((response) => {
+                // response is a boolean of whether the board is valid or not
+                if (response) {
+                    alert("The board is valid");
+                    board_is_solvable = true;
+                } else {
+                    alert("The board is not valid");
+                    board_is_solvable = false;
+                }
+            })
+            .catch((error) => {
+                alert(error);
+                board_is_solvable = false;
+            });
+    }
 </script>
 
 <svelte:head>
@@ -85,6 +83,61 @@
 </svelte:head>
 
 <div class="container">
-    <Greet />
     <Check />
+
+    <table>
+        {#each board as row, i}
+            <tr>
+                {#each row as cell, j}
+                    <td>
+                        <input
+                            style="width: 3em"
+                            type="number"
+                            bind:value={board[i][j]}
+                            min="0"
+                            max="9"
+                        />
+                    </td>
+                {/each}
+            </tr>
+        {/each}
+    </table>
+
+    <br />
+
+    <button class="btn btn-primary" disabled={thinking} on:click={validate}>
+        {#if thinking}
+            <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+            ></span>
+            Validating...
+        {:else}
+            Validate Board (required to solve)
+        {/if}
+    </button>
+
+    <button
+        class="btn btn-primary"
+        disabled={thinking || board_is_solvable}
+        on:click={solve}
+    >
+        {#if thinking}
+            <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+            ></span>
+            Solving...
+        {:else}
+            Solve
+        {/if}
+    </button>
 </div>
+
+<pre>
+    board_is_solvable: {board_is_solvable}
+    thinking: {thinking}
+    board: {JSON.stringify(board)}
+</pre>

@@ -14,12 +14,10 @@
     });
 </script>
 
-{#if is_in_tauri}
-    <div>
-        <p>You're in Tauri!</p>
-    </div>
-{:else}
-    <div>
-        <p>You're not in Tauri!</p>
+{#if !is_in_tauri}
+    <div class="alert alert-danger" role="alert">
+        This app is not running in Tauri, certain features will not function.
+        Restart the app with <code>npm run tauri dev</code> or
+        <code>npm run tauri build</code>
     </div>
 {/if}
