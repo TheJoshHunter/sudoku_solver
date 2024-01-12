@@ -26,6 +26,9 @@ fn validate(board: [[i32; 9]; 9]) -> bool {
         println!("Validate called on board: ");
         print_board(&board);
     }
+
+    let mut something_other_than_zero = false;
+
     // check rows
     for row in 0..9 {
         // create a set to store the numbers we have seen
@@ -33,7 +36,8 @@ fn validate(board: [[i32; 9]; 9]) -> bool {
         // iterate over the columns
         for col in 0..9 {
             if board[row][col] != 0 {
-                // skip 0s as they are empty spaces
+                something_other_than_zero = true; // only need this once
+
                 if row_set.contains(&board[row][col]) {
                     // we have seen this number before in this row, so the board is invalid
                     if DEBUG {
@@ -85,10 +89,18 @@ fn validate(board: [[i32; 9]; 9]) -> bool {
             }
         }
     }
-    if DEBUG {
-        println!("Board is valid");
+
+    if !something_other_than_zero {
+        if DEBUG {
+            println!("Board is invalid as it is all 0s");
+        }
+        return false; // for the sake of performance, if the board is all 0s, lets not try to solve it
+    } else {
+        if DEBUG {
+            println!("Board is valid");
+        }
+        return true; // if we get here, the board is valid
     }
-    return true;
 }
 
 /**
@@ -274,12 +286,15 @@ The board is sent as a 2D array of i32s.
 The board is borrowed as it is not modified.
 */
 fn print_board(board: &[[i32; 9]; 9]) {
+    println!("N | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |");
+    println!("---------------------------------------");
     for row in 0..9 {
-        print!("| ");
+        print!("{} | ", row);
         for col in 0..9 {
             print!("{} | ", board[row][col]);
         }
         println!();
+        println!("---------------------------------------");
     }
 }
 

@@ -16,8 +16,10 @@
 
 {#if !is_in_tauri}
     <div class="alert alert-danger" role="alert">
-        This app is not running in Tauri, certain features will not function.
-        Restart the app with <code>npm run tauri dev</code> or
-        <code>npm run tauri build</code>
+        <h1>
+            This app is not running in Tauri, certain features will not
+            function. Restart the app with <code>npm run tauri dev</code> or
+            <code>npm run tauri build</code>
+        </h1>
     </div>
 {/if}
