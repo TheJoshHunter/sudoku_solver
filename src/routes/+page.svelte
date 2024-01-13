@@ -6,6 +6,9 @@
         DropdownMenu,
         DropdownToggle,
     } from "@sveltestrap/sveltestrap";
+    import { open, save } from "@tauri-apps/api/dialog";
+    import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
+    import { downloadDir } from "@tauri-apps/api/path";
     import { invoke } from "@tauri-apps/api/tauri";
     import "../../node_modules/bootstrap/dist/css/bootstrap.css";
     // onMount(() => {
@@ -128,6 +131,42 @@
                 validating = false;
             });
     }
+
+    async function save_board() {
+        const defaultName = "board.json";
+        const filePath = await save({
+            defaultPath: (await downloadDir()) + "/" + defaultName,
+            filters: [
+                {
+                    name: "JSON",
+                    extensions: ["json"],
+                },
+            ],
+        });
+        if (!filePath) {
+            return;
+        }
+        await writeTextFile(filePath, JSON.stringify(board));
+    }
+
+    async function load_board() {
+        const selected = await open({
+            multiple: false,
+            filters: [
+                {
+                    name: "JSON",
+                    extensions: ["json"],
+                },
+            ],
+        });
+        if (Array.isArray(selected)) {
+            return; // should never happen
+        } else if (selected === null) {
+            return; // nothing to do
+        } else {
+            board = JSON.parse(await readTextFile(selected)) as number[][];
+        }
+    }
 </script>
 
 <svelte:head>
@@ -208,7 +247,7 @@
             ></span>
             Validating...
         {:else}
-            Validate Board (required to solve)
+            Validate Board
         {/if}
     </button>
 
@@ -236,6 +275,12 @@
         }}
     >
         Reset
+    </button>
+    <button class="btn btn-secondary" on:click={save_board}>
+        Save Board
+    </button>
+    <button class="btn btn-secondary" on:click={load_board}>
+        Load Board
     </button>
 </div>
 
