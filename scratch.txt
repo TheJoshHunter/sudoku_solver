@@ -1,0 +1,64 @@
+fn solve_inner(board: &mut [[i32; 9]; 9], mut start_space: (usize, usize)) -> [[i32; 9]; 9] {
+    let mut empty_spaces = Vec::new();
+
+    // find all the empty spaces to fill (we don't want to change existing numbers)
+    for row in 0..9 {
+        for col in 0..9 {
+            if board[row][col] == 0 {
+                // if the space is empty, add it to the vector
+                empty_spaces.push((row, col));
+            }
+        }
+    }
+
+    // if the start space is not empty, find the next empty space
+    if board[start_space.0][start_space.1] != 0 {
+        for i in 0..empty_spaces.len() {
+            if empty_spaces[i] == start_space {
+                start_space = empty_spaces[i + 1];
+                break;
+            }
+        }
+    } else {
+        // if the start space is empty, set it to the first empty space
+        start_space = empty_spaces[0];
+    }
+
+    // iterate over the empty spaces
+    for i in 0..empty_spaces.len() {
+        // start from the start space
+        let (row, col) = start_space;
+
+        // iterate over the numbers 1-9 (the possible numbers for a sudoku board)
+        for num in 1..10 {
+            // set the current empty space to the current number
+            board[row][col] = num;
+
+            // check if the board is valid
+            if validate(*board) {
+                // if the board is valid, check if it is solved
+                if is_solved(&board) {
+                    // if the board is solved, return it
+                    return *board;
+                } else {
+                    // if the board is not solved, solve the next empty space
+                    let solved_board = solve_inner(board, empty_spaces[i + 1]);
+                    if is_solved(&solved_board) {
+                        return solved_board;
+                    }
+                }
+            }
+        }
+
+        // if we get here, we have tried all numbers and none of them worked
+        // set the current empty space back to 0
+        board[row][col] = 0;
+        // return the board to the previous state
+        return *board;
+    }
+
+    // if we get here, we have tried all empty spaces and none of them worked
+    // theoretically, this should never happen as the board should be solved by now
+    // return the board anyway
+    return *board;
+}

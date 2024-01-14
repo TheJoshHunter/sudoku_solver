@@ -9,11 +9,6 @@ fn check() -> bool {
     true // just to make sure it works
 }
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}!", name)
-}
-
 /**
  * This function checks to see if a given sudoku board is valid.
  * This function has a quick escape as once an issue is found, the function returns false to save time.
@@ -191,109 +186,76 @@ fn is_solved(board: &[[i32; 9]; 9]) -> bool {
 }
 
 /**
- * This function returns the number of empty spaces in a given sudoku board.
- * @param board The sudoku board to check.
- * @return The number of empty spaces in the board as i32
- */
-fn empty_spaces(board: &[[i32; 9]; 9]) -> i32 {
-    let mut count = 0;
-    for row in 0..9 {
-        for col in 0..9 {
-            if board[row][col] == 0 {
-                count += 1;
-            }
-        }
-    }
-    return count;
-}
-
-/**
 * JS accessible function to solve a sudoku board.
 * Uses the inner solve function to handle the actual solving.
 * @param board The sudoku board to solve.
 * @return The solved sudoku board.
 */
 #[tauri::command]
-fn solve(mut board: [[i32; 9]; 9]) -> Result<[[i32; 9]; 9], ()> {
+fn solve(mut board: [[i32; 9]; 9]) -> [[i32; 9]; 9] {
     // print the initial board
     println!("Solving board: ");
     print_board(&board);
 
-    // run the inner solve function
+    // run the inner solve function starting at 0,0
     return solve_inner(&mut board, (0, 0));
 }
 
 /**
 * Inner solve function to handle the actual solving of the board.
-* This function uses hill climbing to solve the board.
+* This function uses backtracking to solve the board.
 * @param board The sudoku board to solve.
 * @param start_space The space to start solving at (used for backtracking, starts at 0,0 but will be updated if 0,0 is not empty).
 * @return The solved sudoku board.
 */
-fn solve_inner(
-    board: &mut [[i32; 9]; 9],
-    mut start_space: (usize, usize),
-) -> Result<[[i32; 9]; 9], ()> {
-    let mut empty_spaces = Vec::new();
-
-    // find all the empty spaces to fill (we don't want to change existing numbers)
-    for row in 0..9 {
-        for col in 0..9 {
-            if board[row][col] == 0 {
-                // if the space is empty, add it to the vector
-                empty_spaces.push((row, col));
-            }
-        }
+fn solve_inner(board: &mut [[i32; 9]; 9], start: (usize, usize)) -> [[i32; 9]; 9] {
+    // if the board is solved, return it
+    if is_solved(&board) {
+        return *board;
     }
 
-    // if the start space is not empty, find the next empty space
-    if board[start_space.0][start_space.1] != 0 {
-        for i in 0..empty_spaces.len() {
-            if empty_spaces[i] == start_space {
-                start_space = empty_spaces[i + 1];
+    // get the empty space to start solving at
+    let mut space = Vec::new();
+    if start.0 == 0 && start.1 == 0 {
+        // if the start space is 0,0, find the first empty space
+        for row in 0..9 {
+            for col in 0..9 {
+                if board[row][col] == 0 {
+                    space.push(row);
+                    space.push(col);
+                    break;
+                }
+            }
+            if space.len() > 0 {
                 break;
             }
         }
+    } else {
+        // otherwise, use the start space
+        space.push(start.0);
+        space.push(start.1);
     }
 
-    // iterate over the empty spaces
-    for i in 0..empty_spaces.len() {
-        // start from out start space
-        let (row, col) = start_space;
-
-        // iterate over the numbers 1-9
-        for num in 1..10 {
-            // set the current empty space to the current number
-            board[row][col] = num;
-
-            // check if the board is valid
-            if validate(*board) {
-                // if the board is valid, check if it is solved
-                if is_solved(&board) {
-                    // if the board is solved, return it
-                    return Ok(*board);
-                } else {
-                    // if the board is not solved, solve the next empty space
-                    let solved_board = solve_inner(board, empty_spaces[i + 1]).unwrap();
-                    if is_solved(&solved_board) {
-                        return Ok(solved_board);
-                    }
-                }
+    // if we get here, we have an empty space to solve
+    // iterate over the possible numbers
+    for i in 1..10 {
+        // set the space to the current number
+        board[space[0]][space[1]] = i;
+        // check if the board is valid
+        if validate(*board) {
+            // if it is, try to solve the board
+            let solved = solve_inner(board, (space[0], space[1]));
+            // if the board is solved, return it
+            if is_solved(&solved) {
+                return solved;
             }
         }
-
-        // if we get here, we have tried all numbers and none of them worked
-        // set the current empty space back to 0
-        board[row][col] = 0;
-        // return the board
-        return Err(());
     }
-
-    // if we get here, we have tried all empty spaces and none of them worked
-    // return the board
-    return Ok(*board);
+    // if we get here, we have tried all numbers and none worked
+    // reset the space to 0 and return the board
+    board[space[0]][space[1]] = 0;
+    return *board;
 }
-
 /*
 Function to print the board to the console.
 The board is sent as a 2D array of i32s.
@@ -314,7 +276,7 @@ fn print_board(board: &[[i32; 9]; 9]) {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![check, greet, validate, solve]) // insert the functions to be called from JS
+        .invoke_handler(tauri::generate_handler![check, validate, solve]) // insert the functions to be called from JS
         .run(tauri::generate_context!())
         .expect("Something went wrong while running Tauri application.");
 }
