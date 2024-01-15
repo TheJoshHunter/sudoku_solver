@@ -3,6 +3,9 @@
 
 const DEBUG: bool = true; // set to true to enable debug printing
 
+mod sudoku;
+pub use sudoku::Sudoku;
+
 // exists to easily check if we are running in tauri or not
 #[tauri::command]
 fn check() -> bool {
