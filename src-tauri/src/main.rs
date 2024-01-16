@@ -4,7 +4,7 @@
 const DEBUG: bool = true; // set to true to enable debug printing
 
 mod sudoku;
-pub use sudoku::Sudoku;
+pub use sudoku::Sudoku; // load in the sudoku implementation
 
 // exists to easily check if we are running in tauri or not
 #[tauri::command]
@@ -19,7 +19,7 @@ fn check() -> bool {
  * @return True if the board is valid, false otherwise.
  */
 #[tauri::command]
-fn validate(board: [[i32; 9]; 9]) -> bool {
+fn validate(board: [[u8; 9]; 9]) -> bool {
     if DEBUG {
         println!("Validate called on board: ");
         print_board(&board);
@@ -107,7 +107,7 @@ fn validate(board: [[i32; 9]; 9]) -> bool {
  * @param board The sudoku board to check.
  * @return True if the board is solved, false otherwise.
  */
-fn is_solved(board: &[[i32; 9]; 9]) -> bool {
+fn is_solved(board: &[[u8; 9]; 9]) -> bool {
     if DEBUG {
         println!("Checking if board is solved");
     }
@@ -195,13 +195,19 @@ fn is_solved(board: &[[i32; 9]; 9]) -> bool {
 * @return The solved sudoku board.
 */
 #[tauri::command]
-fn solve(mut board: [[i32; 9]; 9]) -> [[i32; 9]; 9] {
+fn solve(board: [[u8; 9]; 9]) -> [[u8; 9]; 9] {
     // print the initial board
     println!("Solving board: ");
     print_board(&board);
 
-    // run the inner solve function starting at 0,0
-    return solve_inner(&mut board, (0, 0));
+    let mut solver = Sudoku::new(board);
+    if solver.solve() {
+        println!("Board solved!");
+        return solver.get_board();
+    } else {
+        println!("Board could not be solved!");
+        return board;
+    }
 }
 
 /**
@@ -211,7 +217,7 @@ fn solve(mut board: [[i32; 9]; 9]) -> [[i32; 9]; 9] {
 * @param start_space The space to start solving at (used for backtracking, starts at 0,0 but will be updated if 0,0 is not empty).
 * @return The solved sudoku board.
 */
-fn solve_inner(board: &mut [[i32; 9]; 9], start: (usize, usize)) -> [[i32; 9]; 9] {
+fn solve_inner(board: &mut [[u8; 9]; 9], start: (usize, usize)) -> [[u8; 9]; 9] {
     // if the board is solved, return it
     if is_solved(&board) {
         return *board;
@@ -264,7 +270,7 @@ Function to print the board to the console.
 The board is sent as a 2D array of i32s.
 The board is borrowed as it is not modified.
 */
-fn print_board(board: &[[i32; 9]; 9]) {
+fn print_board(board: &[[u8; 9]; 9]) {
     println!("N | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |");
     println!("---------------------------------------");
     for row in 0..9 {

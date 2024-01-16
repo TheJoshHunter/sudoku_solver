@@ -5,11 +5,27 @@ pub struct Sudoku {
     board: [[u8; 9]; 9],
 }
 
+/**
+ * The Sudoku implementation.
+ */
 impl Sudoku {
+    /**
+     * Creates a new Sudoku instance.  
+     */
     pub fn new(board: [[u8; 9]; 9]) -> Self {
         Self { board }
     }
 
+    /**
+     * Getter for the board so send back to the frontend.
+     */
+    pub fn get_board(&self) -> [[u8; 9]; 9] {
+        self.board
+    }
+
+    /**
+     * Returns the first empty cell in the board. or None if all cells are filled using Option.
+     */
     fn find_empty_cell(&self) -> Option<(usize, usize)> {
         // Find a empty cell in the board (returns None if all cells are filled)
         for i in 0..9 {
@@ -23,6 +39,12 @@ impl Sudoku {
         None
     }
 
+    /**
+     * Checks if the value to be added in the board will cause a conflict.
+     * @param index_tuple The index of the cell to be checked.
+     * @param value The value to be added in the board.
+     * @return True if the value can be added in the board, false otherwise.
+     */
     fn check(&self, index_tuple: (usize, usize), value: u8) -> bool {
         // resolve he x and y position of the cell
         let (y, x) = index_tuple;
@@ -57,6 +79,10 @@ impl Sudoku {
         true
     }
 
+    /**
+     * Solves the board using backtracking.
+     * @return True if the board can be solved, false otherwise.
+     */
     pub fn solve(&mut self) -> bool {
         // grabs the first empty cell and tries to solve the board
         let empty_cell = self.find_empty_cell();
@@ -87,6 +113,9 @@ impl Sudoku {
         false
     }
 
+    /**
+     * Prints the board to the console.
+     */
     pub fn print_board(&self) {
         // helper function to display board
 
