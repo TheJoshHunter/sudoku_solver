@@ -11,20 +11,6 @@
     import { downloadDir } from "@tauri-apps/api/path";
     import { invoke } from "@tauri-apps/api/tauri";
     import "../../node_modules/bootstrap/dist/css/bootstrap.css";
-    // onMount(() => {
-    //     // wait till were in the browser to import bootstrap
-    //     if (browser) {
-    //         import(
-    //             "../../node_modules/bootstrap/dist/js/bootstrap.js" as string
-    //         );
-    //         import(
-    //             "../../node_modules/bootstrap/js/dist/dropdown.js" as string
-    //         );
-    //         import(
-    //             "../../node_modules/@popperjs/core/dist/esm/popper.js" as string
-    //         );
-    //     }
-    // });
 
     interface SudokuPreset {
         name: string;
@@ -110,6 +96,17 @@
             problem_text = "The board is not 9x9, this should never happen";
             return;
         }
+
+        // check that each value is between 0 and 9 (also checks if they fit in a rust u8)
+        board.forEach((row) => {
+            row.forEach((cell) => {
+                if (cell < 0 || cell > 9) {
+                    problem_text = "The board contains invalid values";
+                    return;
+                }
+            });
+        });
+
         // call the tauri api to solve the sudoku
         validating = true;
         invoke("validate", { board })
