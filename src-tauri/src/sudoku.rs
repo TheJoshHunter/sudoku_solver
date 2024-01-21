@@ -31,11 +31,12 @@ impl Sudoku {
         for i in 0..9 {
             for j in 0..9 {
                 if self.board[i][j] == 0 {
+                    println!("Found empty cell at ({}, {})", i, j);
                     return Some((i, j));
                 }
             }
         }
-
+        println!("No empty cells!");
         None
     }
 
@@ -106,9 +107,11 @@ impl Sudoku {
             }
         } else {
             // if the board is complete (no empty cells)
+            println!("Solved!");
             return true;
         }
 
+        println!("Cannot be solved!");
         // returning false the board cannot be solved using current configuration
         false
     }

@@ -102,93 +102,6 @@ fn validate(board: [[u8; 9]; 9]) -> bool {
 }
 
 /**
- * This function checks to see if a given sudoku board is solved.
- * Modified version of the validate function that fails if it finds a 0.
- * @param board The sudoku board to check.
- * @return True if the board is solved, false otherwise.
- */
-fn is_solved(board: &[[u8; 9]; 9]) -> bool {
-    if DEBUG {
-        println!("Checking if board is solved");
-    }
-
-    // check rows
-    for row in 0..9 {
-        // create a set to store the numbers we have seen
-        let mut row_set = std::collections::HashSet::new();
-        // iterate over the columns
-        for col in 0..9 {
-            if board[row][col] != 0 {
-                if row_set.contains(&board[row][col]) {
-                    // we have seen this number before in this row, so the board is invalid
-                    if DEBUG {
-                        println!("Row {} is invalid", row);
-                    }
-                    return false;
-                } else {
-                    // new number, add it to the set
-                    row_set.insert(board[row][col]);
-                }
-            } else {
-                // if we find a 0, the board is not solved
-                if DEBUG {
-                    println!("Row {} contains a 0", row);
-                }
-                return false;
-            }
-        }
-    }
-    // check columns
-    for col in 0..9 {
-        let mut col_set = std::collections::HashSet::new();
-        for row in 0..9 {
-            if board[row][col] != 0 {
-                if col_set.contains(&board[row][col]) {
-                    if DEBUG {
-                        println!("Column {} is invalid", col);
-                    }
-                    return false;
-                } else {
-                    col_set.insert(board[row][col]);
-                }
-            } else {
-                if DEBUG {
-                    println!("Column {} contains a 0", col);
-                }
-                return false;
-            }
-        }
-    }
-
-    // check 3x3 squares
-    for row in 0..3 {
-        for col in 0..3 {
-            let mut square_set = std::collections::HashSet::new();
-            for i in 0..3 {
-                for j in 0..3 {
-                    if board[row * 3 + i][col * 3 + j] != 0 {
-                        if square_set.contains(&board[row * 3 + i][col * 3 + j]) {
-                            if DEBUG {
-                                println!("Square {} {} is invalid", row, col);
-                            }
-                            return false;
-                        } else {
-                            square_set.insert(board[row * 3 + i][col * 3 + j]);
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-    if DEBUG {
-        println!("Board is solved!");
-    }
-    return true;
-}
-
-/**
 * JS accessible function to solve a sudoku board.
 * Uses the inner solve function to handle the actual solving.
 * @param board The sudoku board to solve.
@@ -201,6 +114,7 @@ fn solve(board: [[u8; 9]; 9]) -> [[u8; 9]; 9] {
     print_board(&board);
 
     let mut solver = Sudoku::new(board);
+    // this looks funny, but our solve function returns whether or not the board was solved not the solved board
     if solver.solve() {
         println!("Board solved!");
         return solver.get_board();
@@ -210,61 +124,6 @@ fn solve(board: [[u8; 9]; 9]) -> [[u8; 9]; 9] {
     }
 }
 
-/**
-* Inner solve function to handle the actual solving of the board.
-* This function uses backtracking to solve the board.
-* @param board The sudoku board to solve.
-* @param start_space The space to start solving at (used for backtracking, starts at 0,0 but will be updated if 0,0 is not empty).
-* @return The solved sudoku board.
-*/
-fn solve_inner(board: &mut [[u8; 9]; 9], start: (usize, usize)) -> [[u8; 9]; 9] {
-    // if the board is solved, return it
-    if is_solved(&board) {
-        return *board;
-    }
-
-    // get the empty space to start solving at
-    let mut space = Vec::new();
-    if start.0 == 0 && start.1 == 0 {
-        // if the start space is 0,0, find the first empty space
-        for row in 0..9 {
-            for col in 0..9 {
-                if board[row][col] == 0 {
-                    space.push(row);
-                    space.push(col);
-                    break;
-                }
-            }
-            if space.len() > 0 {
-                break;
-            }
-        }
-    } else {
-        // otherwise, use the start space
-        space.push(start.0);
-        space.push(start.1);
-    }
-
-    // if we get here, we have an empty space to solve
-    // iterate over the possible numbers
-    for i in 1..10 {
-        // set the space to the current number
-        board[space[0]][space[1]] = i;
-        // check if the board is valid
-        if validate(*board) {
-            // if it is, try to solve the board
-            let solved = solve_inner(board, (space[0], space[1]));
-            // if the board is solved, return it
-            if is_solved(&solved) {
-                return solved;
-            }
-        }
-    }
-    // if we get here, we have tried all numbers and none worked
-    // reset the space to 0 and return the board
-    board[space[0]][space[1]] = 0;
-    return *board;
-}
 /*
 Function to print the board to the console.
 The board is sent as a 2D array of i32s.
