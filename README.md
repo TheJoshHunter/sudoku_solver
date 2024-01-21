@@ -1,38 +1,39 @@
-# create-svelte
+# Sudoku Solver
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+A simple sudoku solver made with SvelteKit and Tauri. Sudoku's are solved using a backtracking algorithm implemented in Rust for speed and memory efficiency.
+This tool is considered feature complete, but some changes to improve the UI may be made in the future.
 
-## Creating a project
+## Usage
 
-If you're seeing this, you've probably already done this step. Congrats!
+Start the program and enter the numbers in the grid. Empty cells can be left blank or filled with a 0. Click the validate button to ensure there are no pre-existing conflicts. Click the solve button to solve the puzzle. The program will display the solution if one exists, or an error message if the puzzle is unsolvable. The puzzle can also be saved to disk as a .json file and loaded the same way. The puzzle can be reset to a blank grid by clicking the reset button.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Running
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+Premade binaries for Windows and macOS (Intel) are available in the releases. This application has not been notarized, you will need to allow it in your system settings. This program has not been tested on Linux, but it should work fine.
 
 ## Building
 
-To create a production version of your app:
+1. Clone the repo
+2. Install dependencies
 
 ```bash
-npm run build
+pnpm install
 ```
 
-You can preview the production build with `npm run preview`.
+3. Install the latest Rust toolchain using the instructions [here](https://www.rust-lang.org/tools/install)
+4. Use the tauri cli to build the app
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+```bash
+pnpm run tauri build
+```
+
+5. The built app will be in the `src-tauri/target/release` folder
+
+## Contributing
+
+Open a pull request and I'll look at it.
+
+## License
+
+This code is licensed under the MIT license. See the [LICENSE](LICENSE) file for more information.
+The solver code has been adapted from TheAlgorithms Rust backtracking example [here](https://github.com/TheAlgorithms/Rust/blob/master/src/backtracking/sudoku.rs). This code is also licensed under the MIT license.
