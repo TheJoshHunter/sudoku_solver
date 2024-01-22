@@ -2,7 +2,10 @@
 // Original code licensed under MIT License
 
 pub struct Sudoku {
+    pub solved: bool,
     board: [[u8; 9]; 9],
+    pub moves: u32,
+    pub checks: u32,
 }
 
 /**
@@ -13,7 +16,12 @@ impl Sudoku {
      * Creates a new Sudoku instance.  
      */
     pub fn new(board: [[u8; 9]; 9]) -> Self {
-        Self { board }
+        Self {
+            solved: false,
+            board,
+            moves: 0,
+            checks: 0,
+        }
     }
 
     /**
@@ -46,7 +54,10 @@ impl Sudoku {
      * @param value The value to be added in the board.
      * @return True if the value can be added in the board, false otherwise.
      */
-    fn check(&self, index_tuple: (usize, usize), value: u8) -> bool {
+    fn check(&mut self, index_tuple: (usize, usize), value: u8) -> bool {
+        // add one to the checks counter
+        self.checks += 1;
+
         // resolve he x and y position of the cell
         let (y, x) = index_tuple;
 
@@ -85,6 +96,9 @@ impl Sudoku {
      * @return True if the board can be solved, false otherwise.
      */
     pub fn solve(&mut self) -> bool {
+        // add one to the moves counter
+        self.moves += 1;
+
         // grabs the first empty cell and tries to solve the board
         let empty_cell = self.find_empty_cell();
 
@@ -99,6 +113,7 @@ impl Sudoku {
                     // trying to solve the board using the new value
                     // call the function again to set the next empty cell (which should be the next empty cell after the current one)
                     if self.solve() {
+                        self.solved = true;
                         return true;
                     }
                     // backtracking if the board cannot be solved using current configuration
@@ -108,6 +123,7 @@ impl Sudoku {
         } else {
             // if the board is complete (no empty cells)
             println!("Solved!");
+            self.solved = true;
             return true;
         }
 

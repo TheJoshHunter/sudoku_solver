@@ -1,10 +1,26 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use serde::ser::{Serialize, SerializeStruct, Serializer};
+
 const DEBUG: bool = true; // set to true to enable debug printing
 
 mod sudoku;
 pub use sudoku::Sudoku; // load in the sudoku implementation
+
+impl Serialize for Sudoku {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("Sudoku", 4)?;
+        s.serialize_field("solved", &self.solved)?;
+        s.serialize_field("board", &self.get_board())?;
+        s.serialize_field("moves", &self.moves)?;
+        s.serialize_field("checks", &self.checks)?;
+        s.end()
+    }
+}
 
 // exists to easily check if we are running in tauri or not
 #[tauri::command]
@@ -108,7 +124,7 @@ fn validate(board: [[u8; 9]; 9]) -> bool {
 * @return The solved sudoku board.
 */
 #[tauri::command]
-fn solve(board: [[u8; 9]; 9]) -> [[u8; 9]; 9] {
+fn solve(board: [[u8; 9]; 9]) -> Sudoku {
     // print the initial board
     println!("Solving board: ");
     print_board(&board);
@@ -117,10 +133,10 @@ fn solve(board: [[u8; 9]; 9]) -> [[u8; 9]; 9] {
     // this looks funny, but our solve function returns whether or not the board was solved not the solved board
     if solver.solve() {
         println!("Board solved!");
-        return solver.get_board();
+        return solver;
     } else {
         println!("Board could not be solved!");
-        return board;
+        return solver;
     }
 }
 

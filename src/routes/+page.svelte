@@ -17,6 +17,13 @@
         board: number[][];
     }
 
+    interface SudokuResult {
+        board: number[][];
+        solved: boolean;
+        moves: number;
+        checks: number;
+    }
+
     let presets: SudokuPreset[] = [
         {
             name: "easy1",
@@ -80,24 +87,12 @@
         solving = true;
         invoke("solve", { board })
             .then((response) => {
-                if (response === board) {
-                    // the board was not changed, so it is not solvable
-                    problem_text =
-                        "For some reason, the board was not changed, it probably is not solvable";
-                    board_is_solvable = false;
-                    success_text = "";
-                } else if (has_zeros(response as number[][])) {
-                    // the board was changed, but it still has zeros, so it is not solvable
-                    problem_text =
-                        "The board was changed, but it still has zeros, so it is not solvable";
-                    board_is_solvable = false;
-                    success_text = "";
+                const result = response as SudokuResult;
+                if (result.solved) {
+                    board = result.board;
+                    success_text = `Solved in ${result.moves} moves and ${result.checks} checks`;
                 } else {
-                    // the board was changed, so it was solved
-                    board = response as number[][];
-                    board_is_solvable = true;
-                    problem_text = ""; // make the problem text blank
-                    success_text = "The board was solved!";
+                    problem_text = `The board is not solvable, checked in ${result.moves} moves and ${result.checks} checks`;
                 }
             })
             .catch((error) => {
@@ -318,12 +313,3 @@
         Load Board
     </button>
 </div>
-
-<pre>
-    Debug:
-    board_is_solvable: {board_is_solvable}
-    solving: {solving}
-    validating: {validating}
-    problem_text: {problem_text}
-    success_text: {success_text}
-</pre>
