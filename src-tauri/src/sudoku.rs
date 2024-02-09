@@ -1,6 +1,22 @@
 // This code borrowed from https://github.com/TheAlgorithms/Rust/blob/master/src/backtracking/sudoku.rs
 // Original code licensed under MIT License
 
+use serde::ser::{Serialize, SerializeStruct, Serializer};
+
+impl Serialize for Sudoku {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("Sudoku", 4)?;
+        s.serialize_field("solved", &self.solved)?;
+        s.serialize_field("board", &self.get_board())?;
+        s.serialize_field("moves", &self.moves)?;
+        s.serialize_field("checks", &self.checks)?;
+        s.end()
+    }
+}
+
 pub struct Sudoku {
     pub solved: bool,
     board: [[u8; 9]; 9],

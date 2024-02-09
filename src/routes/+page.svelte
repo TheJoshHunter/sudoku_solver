@@ -26,7 +26,7 @@
 
     let presets: SudokuPreset[] = [
         {
-            name: "easy1",
+            name: "easy",
             board: [
                 [5, 3, 0, 2, 9, 0, 0, 0, 4],
                 [0, 0, 2, 7, 4, 3, 5, 0, 0],
@@ -55,7 +55,8 @@
         },
     ];
 
-    const initial_board = [
+    // holds the sudoku board, will be a 2d array of numbers, 0 for empty
+    let board: number[][] = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -66,9 +67,6 @@
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
-
-    // holds the sudoku board, will be a 2d array of numbers, 0 for empty
-    let board: number[][] = initial_board;
 
     let board_is_solvable: boolean = false;
     let problem_text: string = "";
@@ -101,18 +99,6 @@
                 problem_text = error;
             });
         solving = false;
-    }
-
-    function has_zeros(board: number[][]): boolean {
-        // check if the board has any zeros
-        for (let row of board) {
-            for (let cell of row) {
-                if (cell == 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     async function validate() {
@@ -155,13 +141,13 @@
     }
 
     async function save_board() {
-        const defaultName = "board.json";
+        const defaultName = "board.sudoku";
         const filePath = await save({
             defaultPath: (await downloadDir()) + "/" + defaultName,
             filters: [
                 {
-                    name: "JSON",
-                    extensions: ["json"],
+                    name: "Sudoku Board",
+                    extensions: ["sudoku", "json"],
                 },
             ],
         });
@@ -176,8 +162,8 @@
             multiple: false,
             filters: [
                 {
-                    name: "JSON",
-                    extensions: ["json"],
+                    name: "Sudoku Board",
+                    extensions: ["sudoku", "json"],
                 },
             ],
         });
@@ -188,6 +174,18 @@
         } else {
             board = JSON.parse(await readTextFile(selected)) as number[][];
         }
+    }
+
+    function reset() {
+        // Sometimes svelte does not change the entire board, so set each cell to 0
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                board[i][j] = 0;
+            }
+        }
+        board_is_solvable = false;
+        problem_text = "";
+        success_text = "";
     }
 </script>
 
@@ -295,17 +293,7 @@
             Solve
         {/if}
     </button>
-    <button
-        class="btn btn-danger"
-        on:click={() => {
-            board = initial_board;
-            board_is_solvable = false;
-            problem_text = "";
-            success_text = "";
-        }}
-    >
-        Reset
-    </button>
+    <button class="btn btn-danger" on:click={reset}> Reset </button>
     <button class="btn btn-secondary" on:click={save_board}>
         Save Board
     </button>

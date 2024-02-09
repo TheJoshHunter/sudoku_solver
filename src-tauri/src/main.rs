@@ -1,26 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use serde::ser::{Serialize, SerializeStruct, Serializer};
-
-const DEBUG: bool = true; // set to true to enable debug printing
+// this should be set to false for production
+// should automatically be set to false when building for release
+// This is bad and should not be used in a serious application, don't copy this
+static DEBUG: bool = if cfg!(debug_assertions) { true } else { false };
 
 mod sudoku;
 pub use sudoku::Sudoku; // load in the sudoku implementation
-
-impl Serialize for Sudoku {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut s = serializer.serialize_struct("Sudoku", 4)?;
-        s.serialize_field("solved", &self.solved)?;
-        s.serialize_field("board", &self.get_board())?;
-        s.serialize_field("moves", &self.moves)?;
-        s.serialize_field("checks", &self.checks)?;
-        s.end()
-    }
-}
 
 // exists to easily check if we are running in tauri or not
 #[tauri::command]
@@ -36,11 +23,6 @@ fn check() -> bool {
  */
 #[tauri::command]
 fn validate(board: [[u8; 9]; 9]) -> bool {
-    if DEBUG {
-        println!("Validate called on board: ");
-        print_board(&board);
-    }
-
     let mut something_other_than_zero = false;
 
     // check rows
@@ -126,10 +108,12 @@ fn validate(board: [[u8; 9]; 9]) -> bool {
 #[tauri::command]
 fn solve(board: [[u8; 9]; 9]) -> Sudoku {
     // print the initial board
-    println!("Solving board: ");
-    print_board(&board);
-
     let mut solver = Sudoku::new(board);
+    if DEBUG {
+        println!("Solving board: ");
+        solver.print_board();
+    }
+
     // this looks funny, but our solve function returns whether or not the board was solved not the solved board
     if solver.solve() {
         println!("Board solved!");
@@ -137,24 +121,6 @@ fn solve(board: [[u8; 9]; 9]) -> Sudoku {
     } else {
         println!("Board could not be solved!");
         return solver;
-    }
-}
-
-/*
-Function to print the board to the console.
-The board is sent as a 2D array of i32s.
-The board is borrowed as it is not modified.
-*/
-fn print_board(board: &[[u8; 9]; 9]) {
-    println!("N | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |");
-    println!("---------------------------------------");
-    for row in 0..9 {
-        print!("{} | ", row);
-        for col in 0..9 {
-            print!("{} | ", board[row][col]);
-        }
-        println!();
-        println!("---------------------------------------");
     }
 }
 
