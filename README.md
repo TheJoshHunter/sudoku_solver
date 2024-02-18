@@ -3,6 +3,8 @@
 A simple sudoku solver made with SvelteKit and Tauri. Sudoku's are solved using a backtracking algorithm implemented in Rust for speed and memory efficiency.
 This tool is considered feature complete, but some changes to improve the UI may be made in the future.
 
+# [Download for Windows](https://github.com/TheJoshHunter/sudoku_solver/releases/download/v0.3.0/SudokuSolver_0.3.0_x64_portable.exe) or [Download for macOS](https://github.com/TheJoshHunter/sudoku_solver/releases/download/v0.3.0/SudokuSolver_0.3.0_universal.dmg)
+
 ## Usage
 
 Start the program and enter the numbers in the grid. Empty cells can be left blank or filled with a 0. Click the validate button to ensure there are no pre-existing conflicts. Click the solve button to solve the puzzle. The program will display the solution if one exists, or an error message if the puzzle is unsolvable. The puzzle can also be saved to disk as a .sudoku file and loaded the same way. The puzzle can be reset to a blank grid by clicking the reset button.
