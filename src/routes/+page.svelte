@@ -6,10 +6,10 @@
         DropdownMenu,
         DropdownToggle,
     } from "@sveltestrap/sveltestrap";
-    import { open, save } from "@tauri-apps/api/dialog";
-    import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
+    import { open, save } from "@tauri-apps/plugin-dialog";
+    import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
     import { downloadDir } from "@tauri-apps/api/path";
-    import { invoke } from "@tauri-apps/api/tauri";
+    import { invoke } from "@tauri-apps/api/core";
     import "../../node_modules/bootstrap/dist/css/bootstrap.css";
 
     interface SudokuPreset {
