@@ -6,10 +6,10 @@
         DropdownMenu,
         DropdownToggle,
     } from "@sveltestrap/sveltestrap";
+    import { invoke } from "@tauri-apps/api/core";
+    import { downloadDir } from "@tauri-apps/api/path";
     import { open, save } from "@tauri-apps/plugin-dialog";
     import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-    import { downloadDir } from "@tauri-apps/api/path";
-    import { invoke } from "@tauri-apps/api/core";
     import "../../node_modules/bootstrap/dist/css/bootstrap.css";
 
     interface SudokuPreset {
@@ -147,7 +147,7 @@
             filters: [
                 {
                     name: "Sudoku Board",
-                    extensions: ["sudoku", "json"],
+                    extensions: ["sudoku"],
                 },
             ],
         });
@@ -163,7 +163,7 @@
             filters: [
                 {
                     name: "Sudoku Board",
-                    extensions: ["sudoku", "json"],
+                    extensions: ["sudoku"],
                 },
             ],
         });
@@ -187,6 +187,27 @@
         problem_text = "";
         success_text = "";
     }
+
+    // i used gemini to create this
+    function calcStyle(i: number, j: number): string {
+        // Check for invalid input.
+        if (i < 0 || i > 8 || j < 0 || j > 8) {
+            return "#FFFFFF";
+        }
+
+        // Calculate the 3x3 box index.
+        const boxRow = Math.floor(i / 3);
+        const boxCol = Math.floor(j / 3);
+        const boxIndex = boxRow * 3 + boxCol;
+
+        // Determine the color based on the box index.
+        // Alternate between two slightly different gray shades.
+        if (boxIndex % 2 === 0) {
+            return "grey-background"; // Light gray
+        } else {
+            return "white-background"; // White
+        }
+    }
 </script>
 
 <svelte:head>
@@ -196,25 +217,20 @@
 <div class="container">
     <Check />
 
-    <table class="table table-bordered table-sm table-striped">
-        <thead>
-            <th></th>
-            {#each board as col, i}
-                <th>{i + 1}</th>
-            {/each}
-        </thead>
+    <table class="table table-bordered table-sm">
         <tbody>
             {#each board as row, i}
                 <tr>
-                    <th>{i + 1}</th>
                     {#each row as cell, j}
-                        <td>
+                        <td class={`${calcStyle(i, j)}`}>
                             <input
-                                style="width: 100%;"
+                                style="width: 100%; border: none;"
+                                class={`no-arr ${calcStyle(i, j)}`}
                                 type="number"
                                 bind:value={board[i][j]}
                                 min="0"
                                 max="9"
+                                name={`row ${i} col ${j}`}
                             />
                         </td>
                     {/each}
@@ -301,3 +317,25 @@
         Load Board
     </button>
 </div>
+
+<style>
+    .grey-background {
+        background-color: #d3d3d3;
+    }
+    .light-background {
+        background-color: #ffffff;
+    }
+
+    /* Hide Arrows */
+    /* Chrome, Safari, Edge, Opera */
+    input.no-arr::-webkit-outer-spin-button,
+    input.no-arr::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type="number"].no-arr {
+        -moz-appearance: textfield;
+    }
+</style>
